@@ -1,0 +1,103 @@
+#install.packages("readxl")
+install.packages("ggplot2")
+install.packages(shiny)
+#installed.packages("plotly")
+#library(plotly)
+library(shiny)
+library(shinythemes)
+library(shinydashboard)
+
+
+#library("readxl")
+library("ggplot2")
+
+#to read data set
+courseUdemy <- read.csv("F:\\Projects in 4\\Information Visualization\\Project\\udemy_courses.csv")
+
+# To Convert date to Known shape ex: 2022/2/22
+courseUdemy$published_timestamp <-as.Date(courseUdemy$published_timestamp)
+
+
+
+
+ui <- dashboardPage(
+  dashboardHeader(),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Dataset", tabName = "dataset", icon = icon("th")),
+      menuItem("Visualization", tabName = "visualization", icon = icon("dashboard"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      # First tab content
+      tabItem(tabName = "dataset",
+              h1("Dataset is Udemy Courses"),
+              DT::dataTableOutput("DisplayData")
+      ),
+      
+      # Second tab content
+      tabItem(tabName = "visualization",
+              fluidPage(
+                #theme = shinytheme("superhero"),
+                titlePanel("Udemy Dataset"),
+                
+                tabsetPanel(
+                  tabPanel(title = "Team Name",
+                           h1("Fcis Team"),
+                           h3("Ahmed Osama Mansour"),
+                           h3("Nour Eldien Walid"),
+                           h3("Abdelrhman"),
+                           h3("Aya Mohammed Abdel-Aziz"),
+                           h3("Nermeen Emam"),
+                           h3("Esraa Tarek Mohammed Salam"),
+                  ),
+                  tabPanel(title = "Histogram Plot",h1("Histogram Plot"),
+                           sidebarLayout(
+                             sidebarPanel(
+                               sliderInput(
+                                 inputId = "bins",
+                                 label = "Number of bins:",
+                                 min = 0,max = 50,value = 30)
+                             ),
+                             mainPanel(
+                               plotOutput(outputId = "histplot"),h2("Observation of the plot is : Most frequent course when the price = 20$ ")
+                             )
+                           )
+                  ),
+                  tabPanel(title = "Bar charts",h1("Bar charts"),plotOutput(outputId = "barchart"),h2("Observation of the plot is : Both Business Finance and Web Development are equal frequency and minimum frequency is graphic design")),
+                  tabPanel(title = "Box Plot",h1("Box Plot"),plotOutput(outputId = "boxPlot"),h2("Observation of the plot is : ")),
+                  tabPanel(title = "Freqpoly Plot",h1("Freqpoly Plot"),plotOutput(outputId = "FreqpolyPlot"),h2("Observation of the plot is : ")),
+                  
+                )
+              )
+      )
+    )
+  )
+)
+
+
+server <- function(input, output, session) {
+  #Tables of Dataset
+  output$DisplayData <- DT::renderDataTable({
+    courseUdemy
+    #DT::datatable(Data_to_display(courseUdemy))
+  })
+  #histogram plot
+  output$histplot <- renderPlot({
+    x <- courseUdemy$price
+    hist(x,breaks = as.numeric(input$bins),col="#007bc2",border="white",xlab="Price",main = "Histogram of Courses Price")
+  })
+  output$barchart <- renderPlot({
+    ggplot(courseUdemy,aes(subject))+geom_bar(fill = "#FF6666")
+  })
+  output$boxPlot <- renderPlot({
+    ggplot(courseUdemy,aes(x=subject,y=num_lectures))+geom_boxplot(alpha=0.2)  })
+  output$FreqpolyPlot <- renderPlot({
+    ggplot(courseUdemy, aes(num_lectures)) + geom_freqpoly()  })
+
+  
+  
+}
+
+shinyApp(ui, server)
